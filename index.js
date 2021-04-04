@@ -180,7 +180,7 @@ const FPS = 120;
 //states
 var SCORE = 0;
 var LEVEL = 0;
-var LINES = 145;
+var LINES = 0;
 var SPEED = 60;
 var TETROMINS = 0;
 var TETRIS = 0;
@@ -255,7 +255,7 @@ function keyDown(kpd) {
 
         SCORE = 0;
         LEVEL = 0;
-        LINES = 145;
+        LINES = 0;
         SPEED = 60;
         TETROMINS = 0;
         TETRIS = 0;
