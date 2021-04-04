@@ -1,4 +1,4 @@
-School Project
+Website about Tetris
 by alwen
 
 Типа тетрис
