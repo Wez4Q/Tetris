@@ -1,7 +1,7 @@
 var playSpace = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-  [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -169,19 +169,40 @@ const tetramino = [
   ]
 ]
 
-const TSIZE = 25;
-const FPS = 30;
+const TETR_SIZE = [4, 3, 3, 2, 3, 3, 3]
+const TETR_COLOR = ["#DD2E44", "#E9896A", "#F4900C", "#FDCB58", "#AA8ED6", "#55ACEE", "#78B159"]
+const TETR_SPEED = [50, 45, 40, 35, 30, 27, 24, 21, 18, 15, 13, 11, 9, 8, 7, 6];
+const TETR_LINES = [50, 90, 120, 140, 150]
 
-var TETRNOW = false;
-var SPEED = 30;
+const SQUARE_SIZE = 25;
+const FPS = 120;
+
+//states
 var SCORE = 0;
 var LEVEL = 0;
-var COLOR = "#FFFFFF";
-var HOLD = 0;
+var LINES = 145;
+var SPEED = 60;
+var TETROMINS = 0;
+var TETRIS = 0;
 
+var GAME = false;
+var GAME_OVER = false;
+var RYTHM_SPEED = 60;
+var NEWTETR = true;
+var DOWN_SPEED = 0;
+var HOLD = 0;
+var DRAW_X = 3;
+var DRAW_Y = 0;
+var ADD_SCORE = 0;
+
+var PREV_TETR;
+var NEXT_TETR = -1;
 var TETR_RIGHT = false;
 var TETR_LEFT = false;
-var TETR_DOWN = false;
+var TETR_ROTATE_R = false;
+var TETR_ROTATE_NOW = 0;
+var TETR_ROTATED_R = false;
+var TETR_NOW = 0;
 
 var canv = document.getElementById("gameCanvas");
 var ctx = canv.getContext("2d");
@@ -191,6 +212,9 @@ document.addEventListener("keyup", keyUp);
 
 setInterval(update, 1000 / FPS);
 
+
+//Z = 90
+//X = 88
 function keyDown(kpd) {
   switch(kpd.keyCode) {
     case 37:
@@ -200,7 +224,45 @@ function keyDown(kpd) {
       TETR_RIGHT = true;
       break;
     case 40:
-      TETR_DOWN = true;
+      DOWN_SPEED = SPEED-5;
+      break;
+    case 32:
+      if (!GAME || GAME_OVER){
+        GAME = true;
+        GAME_OVER = false;
+
+        for(let y = 0; y < 20; y++){
+          for(let x = 0; x < 10; x++){
+            playSpace[y][x] = 0;
+          }
+        }
+
+        NEXT_TETR = -1;
+        TETR_RIGHT = false;
+        TETR_LEFT = false;
+        TETR_ROTATE_R = false;
+        TETR_ROTATE_NOW = 0;
+        TETR_ROTATED_R = false;
+        TETR_NOW = 0;
+
+        RYTHM_SPEED = 60;
+        NEWTETR = true;
+        DOWN_SPEED = 0;
+        HOLD = 0;
+        DRAW_X = 3;
+        DRAW_Y = 0;
+        ADD_SCORE = 0;
+
+        SCORE = 0;
+        LEVEL = 0;
+        LINES = 145;
+        SPEED = 60;
+        TETROMINS = 0;
+        TETRIS = 0;
+      }
+      break;
+    case 90:
+      TETR_ROTATE_R = true;
       break;
     }
     HOLD = 1;
@@ -215,22 +277,136 @@ function keyUp(kpu) {
       TETR_RIGHT = false;
       break;
     case 40:
-      TETR_DOWN = false;
+      DOWN_SPEED = 0;
+      break;
+    case 90:
+      TETR_ROTATED_R = false;
+      TETR_ROTATE_R = false;
       break;
     }
     HOLD = 0;
 }
 
 function update() {
-  if(HOLD == 1 || (HOLD > 10)) move();
+  ctx.fillStyle = "black"
+  ctx.fillRect(0, 0, canv.width, canv.height);
 
-  if(HOLD > 0) HOLD++;
-  draw(COLOR);
+  if(GAME && !GAME_OVER){
+    ctx.fillStyle = "white"
+    ctx.fillRect(45, 45, 260, 510);
+    if(NEWTETR) addNewTetr();
+
+    if(HOLD == 1 || (HOLD > 20 && HOLD % 8 == 0)) move();
+    if(HOLD > 0) HOLD++;
+
+    if(LINES > TETR_LINES[LEVEL] && LEVEL < 5){
+      SPEED = TETR_SPEED[LEVEL];
+      LEVEL++;
+    }
+
+    if(LEVEL >= 5){
+      if(LINES >= 150 + 10*(LEVEL-4)) {
+        SPEED = TETR_SPEED[LEVEL];
+        LEVEL++
+      }
+    }
+
+    if(RYTHM_SPEED > SPEED - DOWN_SPEED){
+      if(DOWN_SPEED != 0) ADD_SCORE++;
+      down();
+      RYTHM_SPEED = 0;
+    }
+    RYTHM_SPEED++;
+    draw();
+  } else if (!GAME_OVER && !GAME) {
+    ctx.fillStyle = "white"
+    ctx.font = "24px ArcadeFont";
+    ctx.fillText(`Press Enter to start.`, 50, 300);
+  } else if (GAME_OVER && GAME){
+    let score = pad(SCORE, 6)
+
+    ctx.fillStyle = "#DD2E44"
+    ctx.font = "30px ArcadeFont";
+    ctx.fillText(`GAME OVER`, 155, 260);
+
+    ctx.fillStyle = "white"
+    ctx.font = "24px ArcadeFont";
+    ctx.fillText(score, 215, 295);
+
+    ctx.fillStyle = "grey"
+    ctx.fillText(`Press Enter to retry.`, 50, 550);
+  }
 }
 
 function move(){
   if(TETR_RIGHT && !TETR_LEFT) movingRight();
   if(TETR_LEFT && !TETR_RIGHT) movingLeft();
+  if(TETR_ROTATE_R && !TETR_ROTATED_R && TETR_NOW != 3) rotateRight();
+}
+
+function down(){
+  let canMoveDown = true;
+  for(let x = 0; x < 10; x++){
+    for(let y = 19; y >= 0; y--){
+      if(playSpace[y][x] == 1){
+        if(y == 19 || playSpace[y+1][x] > 1) canMoveDown = false;
+      }
+    }
+  }
+
+  if(canMoveDown){
+    for(let x = 0; x < 10; x++){
+      for(let y = 19; y >= 0; y--){
+        if(playSpace[y][x] == 1){
+          playSpace[y+1][x] = 1;
+          playSpace[y][x] = 0;
+        }
+      }
+    }
+    DRAW_Y++;
+  } else {
+    let colorPlaySpace = TETR_NOW + 2;
+    for(let y = 19; y >= 0; y--){
+      for(let x = 0; x < 10; x++){
+        if(playSpace[y][x] == 1) playSpace[y][x] = colorPlaySpace
+      }
+    }
+    NEWTETR = true;
+    TETROMINS++;
+    clearLines();
+  }
+}
+
+function clearLines(){
+  let canClear;
+  let linesNow = 0;
+
+  for(let y = 19; y >= 0; y--){
+    canClear = true;
+    for(let x = 0; x < 10; x++)
+      if(playSpace[y][x] == 0) canClear = false;
+
+    if(canClear){
+      for(let x = 0; x < 10; x++) playSpace[y][x] = 0;
+
+      for(let cy = y-1; cy >= 0; cy--){
+        for(let x = 0; x < 10; x++){
+          playSpace[cy+1][x] = playSpace[cy][x];
+          playSpace[cy][x] = 0;
+        }
+      }
+      linesNow++;
+      LINES++;
+      y = 20;
+    }
+  }
+
+  switch(linesNow){
+    case 1: SCORE += 100 + Math.floor(100 * (LEVEL/10)); break;
+    case 2: SCORE += 300 + Math.floor(300 * (LEVEL/10)); break;
+    case 3: SCORE += 700 + Math.floor(700 * (LEVEL/10)); break;
+    case 4: SCORE += 1500 + Math.floor(1500 * (LEVEL/10)); TETRIS++; break;
+  }
 }
 
 function movingRight(){
@@ -253,6 +429,7 @@ function movingRight(){
         }
       }
     }
+    if(DRAW_X < 10 - TETR_SIZE[TETR_NOW]) DRAW_X++;
   }
 }
 
@@ -276,43 +453,142 @@ function movingLeft(){
         }
       }
     }
+    if(DRAW_X != 0) DRAW_X--;
   }
 }
 
-function addNewTetr(){
+function rotateRight(){
+  let canRotateRight = true;
+  let rotate = TETR_ROTATE_NOW + 1;
+  if(rotate > 3 || TETR_NOW == 3) rotate = 0;
+  for(let y = 0; y < TETR_SIZE[TETR_NOW]; y++){
+    for(let x = 0; x < TETR_SIZE[TETR_NOW]; x++){
+      if(tetramino[TETR_NOW][rotate][y][x] == 1) {
+        if(playSpace[y+DRAW_Y][x+DRAW_X] > 1) canRotateRight = false;
+      }
+    }
+  }
 
+  if(canRotateRight){
+    for(let y = 0; y < TETR_SIZE[TETR_NOW]; y++){
+      for(let x = 0; x < TETR_SIZE[TETR_NOW]; x++){
+        if(playSpace[y+DRAW_Y][x+DRAW_X] == 1) playSpace[y+DRAW_Y][x+DRAW_X] = 0;
+      }
+    }
+
+    if(TETR_ROTATE_NOW + 1 > 3 || TETR_NOW == 3) TETR_ROTATE_NOW = 0;
+    else TETR_ROTATE_NOW++;
+
+    for(let y = 0; y < TETR_SIZE[TETR_NOW]; y++){
+      for(let x = 0; x < TETR_SIZE[TETR_NOW]; x++){
+        if(tetramino[TETR_NOW][TETR_ROTATE_NOW][y][x] == 1) {
+          playSpace[y+DRAW_Y][x+DRAW_X] = tetramino[TETR_NOW][TETR_ROTATE_NOW][y][x];
+        }
+      }
+    }
+  }
+  TETR_ROTATED_R = true;
 }
 
-//#DD2E44 - red 2
-//#E9896A - brown 3
-//#AA8ED6 - purple 4
-//#FDCB58 - yellow 5
-//#78B159 - green 6
-//#F4900C - orange 7
-//#55ACEE - blue 8
-function draw(tetraminoColor) {
+function addNewTetr(){
+  if(NEXT_TETR < 0) newNextTetr();
+  if(ADD_SCORE) SCORE += ADD_SCORE - 1;
+  ADD_SCORE = 0;
+  DRAW_X = 3;
+  DRAW_Y = 0;
+
+  PREV_TETR = TETR_NOW;
+  TETR_NOW = NEXT_TETR;
+  NEWTETR = false;
+  let extraX = 0;
+  let TetrRotate = 0;
+  if(TETR_NOW != 3) {
+    TetrRotate = getRandomNum(4);
+  } else extraX = 1;
+
+  for(let y = 0; y < TETR_SIZE[TETR_NOW]; y++){
+    for(let x = 0; x < TETR_SIZE[TETR_NOW]; x++){
+      if(tetramino[TETR_NOW][TetrRotate][y][x] == 1) {
+        if(playSpace[y][x+3+extraX] != 0) GAME_OVER = true;
+        playSpace[y][x+3+extraX] = tetramino[TETR_NOW][TetrRotate][y][x];
+      }
+    }
+  }
+
+  newNextTetr();
+  TETR_ROTATE_NOW = TetrRotate;
+}
+
+function newNextTetr(){
+  let TetrNum;
+  do {
+    TetrNum = getRandomNum(7);
+  } while(TetrNum == TETR_NOW || TetrNum == PREV_TETR);
+
+  NEXT_TETR = TetrNum;
+}
+
+//const TETR_COLOR = ["#DD2E44", "#E9896A", "#F4900C", "#FDCB58", "#AA8ED6", "#55ACEE", "#78B159"]
+function draw() {
+  drawText();
+  for(let y = 0; y < TETR_SIZE[NEXT_TETR]; y++){
+    for(let x = 0; x < TETR_SIZE[NEXT_TETR]; x++){
+      if(tetramino[NEXT_TETR][0][y][x] == 1) drawColor(x, y, TETR_COLOR[NEXT_TETR], 12.4, 13)
+    }
+  }
+
   for(let y = 0; y < 20; y++){
     for(let x = 0; x < 10; x++){
       switch(playSpace[y][x]) {
         case 0: drawColor(x, y, "#000000"); break;
-        case 1: drawColor(x, y, tetraminoColor); break;
+        case 1: drawColor(x, y, TETR_COLOR[TETR_NOW]); break;
         case 2: drawColor(x, y, "#DD2E44"); break;
         case 3: drawColor(x, y, "#E9896A"); break;
-        case 4: drawColor(x, y, "#AA8ED6"); break;
+        case 4: drawColor(x, y, "#F4900C"); break;
         case 5: drawColor(x, y, "#FDCB58"); break;
-        case 6: drawColor(x, y, "#78B159"); break;
-        case 7: drawColor(x, y, "#F4900C"); break;
-        case 8: drawColor(x, y, "#55ACEE"); break;
+        case 6: drawColor(x, y, "#AA8ED6"); break;
+        case 7: drawColor(x, y, "#55ACEE"); break;
+        case 8: drawColor(x, y, "#78B159"); break;
         default: drawColor(x, y, "#FFFFFF"); break;
       }
     }
   }
 }
 
-function drawColor(x, y, color) {
+function drawColor(x, y, color, extraX, extraY) {
+  extraX = extraX || 0;
+  extraY = extraY || 0;
+
   ctx.beginPath();
   ctx.fillStyle = color;
-  ctx.fillRect(TSIZE*x, TSIZE*y, TSIZE, TSIZE)
+  ctx.fillRect(SQUARE_SIZE*(x+2+extraX), SQUARE_SIZE*(y+2+extraY), SQUARE_SIZE, SQUARE_SIZE)
   ctx.fill();
   ctx.closePath();
+}
+
+function drawText(){
+  let score = pad(SCORE, 6);
+
+  ctx.fillStyle = "white"
+  ctx.font = "30px ArcadeFont";
+  ctx.fillText(`Score: `, 350, 90);
+  ctx.fillText(score, 350, 125);
+
+  ctx.font = "24px ArcadeFont";
+  ctx.fillText('LINES:' + LINES, 350, 170)
+  ctx.fillText(`TRMS:` + TETROMINS, 350, 196);
+  ctx.fillText('TRTS:' + TETRIS, 350, 222);
+  ctx.fillText('LVL:' + (LEVEL+1), 350, 248)
+
+  ctx.fillText('Next:', 350, 350)
+}
+
+function getRandomNum(max) {
+  return Math.floor(Math.random() * max);
+}
+
+function pad(n, width){
+  let z = 0;
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
