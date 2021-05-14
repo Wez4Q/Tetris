@@ -172,7 +172,7 @@ const tetramino = [
 const TETR_SIZE = [4, 3, 3, 2, 3, 3, 3]
 const TETR_COLOR = ["#DD2E44", "#E9896A", "#F4900C", "#FDCB58", "#AA8ED6", "#55ACEE", "#78B159"]
 const TETR_SPEED = [50, 45, 40, 35, 30, 27, 24, 21, 18, 15, 13, 11, 9, 8, 7, 6];
-const TETR_LINES = [50, 90, 120, 140, 150]
+const TETR_LINES = [10, 30, 45, 60, 70]
 
 const SQUARE_SIZE = 25;
 const FPS = 120;
@@ -231,7 +231,7 @@ function keyDown(kpd) {
       if(!TETR_DOWN_PRESS) DOWN_SPEED = SPEED-5;
       TETR_DOWN_PRESS = true;
       break;
-    case 32:
+    case 13:
       if (!GAME || GAME_OVER){
         GAME = true;
         GAME_OVER = false;
@@ -303,8 +303,10 @@ function keyUp(kpu) {
 }
 
 function update() {
-  ctx.fillStyle = "black"
+  ctx.fillStyle = "white"
   ctx.fillRect(0, 0, canv.width, canv.height);
+  ctx.fillStyle = "black"
+  ctx.fillRect(5, 5, canv.width-10, canv.height-10);
 
   if(GAME && !GAME_OVER){
     ctx.fillStyle = "white"
@@ -320,9 +322,9 @@ function update() {
     }
 
     if(LEVEL >= 5){
-      if(LINES >= 150 + 10*(LEVEL-4)) {
+      if(LINES >= 70 + 10*(LEVEL-4)) {
         SPEED = TETR_SPEED[LEVEL];
-        LEVEL++
+        LEVEL++;
       }
     }
 
@@ -341,9 +343,6 @@ function update() {
     let score = pad(SCORE, 6)
 
     if (!CHECKED){
-      draw();
-
-    } else {
       ctx.fillStyle = "#DD2E44"
       ctx.font = "30px ArcadeFont";
       ctx.fillText(`GAME OVER`, 155, 260);

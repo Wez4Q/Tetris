@@ -2,3 +2,156 @@
   font-family: 'ArcadeFont';
   src: url('./resources/PressStart2P-Regular.ttf');
 }
+
+#hGame{
+  overflow: hidden;
+}
+
+body{
+  background-color: #7FB471;
+  background: url(resources/background.png) no-repeat;
+  background-size: cover;
+  color: #FFFFFF;
+  font-family: 'ArcadeFont';
+  margin: 0px;
+  font-size: 20px;
+}
+
+#header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0px 2% 2%;
+  padding: 1% 3% 1%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+}
+
+#h2{
+  text-align: center;
+  margin: 2% 0 2%;
+}
+
+#game{
+  display: flex;
+  justify-content: space-between;
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+#help{
+  background-color: #000000;
+  padding: 2%;
+  border: 5px solid white;
+  margin-left: 3%;
+}
+
+.right{
+  float: right;
+  margin: 0 0 5px 5px;
+  border-radius: 10px;
+}
+
+.left{
+  float: left;
+  margin: 0 1% 0 5px;
+  border-radius: 10px;
+}
+
+.center{
+  text-align: center;
+  margin: 5px 1% 1% 5px;
+  border-radius: 10px;
+}
+
+#footer{
+  display: flex;
+  margin: 0px 1%;
+}
+
+#arrowup{
+  text-align: center;
+}
+
+.navigation{
+  color: #FFFFFF;
+  margin-left: 30px;
+  border-bottom: 0px solid #FFFFFF;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: 0s all;
+}
+
+.navigation:hover{
+  border-bottom: 1px solid #FFFFFF;
+}
+
+#activetab{
+  border-bottom: 1px solid #A9A9A9;
+  color: #A9A9A9;
+}
+
+.tabs_cl{
+  display: none;
+}
+
+.tabs_cl:target{
+  display: block;
+}
+
+#tab1{
+  margin: 0px auto;
+}
+
+#content{
+  margin: 1% 2% 1%;
+  padding: 1% 3% 1%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 25px;
+}
+
+#colortetr{
+  border-radius: 25px;
+}
+
+.link{
+  color: #b861ff;
+  border-bottom: 1px solid #b861ff;
+}
+
+#gameCanvas{
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  width: 37%;
+}
+
+#footer{
+  border-top-left-radius: 25px;
+  border-top-right-radius: 25px;
+  margin: 2% 2% 0px;
+  padding: 2% 3% 1%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #8C8C8C;
+  justify-content: space-between;
+}
+
+#TR1{
+  color: #DD2E44;
+}
+#TR2{
+  color: #E9896A;
+}
+#TR3{
+  color: #F4900C;
+}
+#TR4{
+  color: #FDCB58;
+}
+#TR5{
+  color: #AA8ED6;
+}
+#TR6{
+  color: #55ACEE;
+}
